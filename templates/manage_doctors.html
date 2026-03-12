@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Doctors</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="#">Clinic System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('receptionist_dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('doctors.list_doctors') }}">Manage Doctors</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <span class="nav-link text-white">Receptionist {{ current_user.name }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Manage Doctors</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDoctorModal">
+                + Add Doctor
+            </button>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Specialization</th>
+                            <th>Working Hours</th>
+                            <th>Slot Duration (mins)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doctor in doctors %}
+                        <tr>
+                            <td>{{ doctor.name }}</td>
+                            <td>{{ doctor.specialization }}</td>
+                            <td>{{ doctor.working_hours_start }} - {{ doctor.working_hours_end }}</td>
+                            <td>{{ doctor.slot_duration }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-secondary me-2" onclick="editDoctor('{{ doctor.id }}', '{{ doctor.name }}', '{{ doctor.specialization }}', '{{ doctor.working_hours_start }}', '{{ doctor.working_hours_end }}', '{{ doctor.slot_duration }}')">Edit</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteDoctor('{{ doctor.id }}')">Delete</button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No doctors registered.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Doctor Modal -->
+    <div class="modal fade" id="addDoctorModal" tabindex="-1" aria-labelledby="addDoctorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="{{ url_for('doctors.add_doctor') }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addDoctorModalLabel">Add New Doctor</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" name="password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Specialization</label>
+                            <input type="text" class="form-control" name="specialization" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Start Time</label>
+                                <input type="time" class="form-control" name="working_hours_start" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">End Time</label>
+                                <input type="time" class="form-control" name="working_hours_end" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Slot Duration (mins)</label>
+                            <input type="number" class="form-control" name="slot_duration" value="30" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Doctor</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Doctor Modal -->
+    <div class="modal fade" id="editDoctorModal" tabindex="-1" aria-labelledby="editDoctorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="editDoctorForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editDoctorModalLabel">Edit Doctor</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="edit_doctor_id">
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control" id="edit_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Specialization</label>
+                            <input type="text" class="form-control" id="edit_specialization" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Start Time</label>
+                                <input type="time" class="form-control" id="edit_working_hours_start" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">End Time</label>
+                                <input type="time" class="form-control" id="edit_working_hours_end" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Slot Duration (mins)</label>
+                            <input type="number" class="form-control" id="edit_slot_duration" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Update Doctor</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Modal instance for editing
+        let editModal;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            editModal = new bootstrap.Modal(document.getElementById('editDoctorModal'));
+        });
+
+        function editDoctor(id, name, specialization, start, end, slot) {
+            document.getElementById('edit_doctor_id').value = id;
+            document.getElementById('edit_name').value = name;
+            document.getElementById('edit_specialization').value = specialization;
+            document.getElementById('edit_working_hours_start').value = start;
+            document.getElementById('edit_working_hours_end').value = end;
+            document.getElementById('edit_slot_duration').value = slot;
+            editModal.show();
+        }
+
+        document.getElementById('editDoctorForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const doctorId = document.getElementById('edit_doctor_id').value;
+            const data = {
+                name: document.getElementById('edit_name').value,
+                specialization: document.getElementById('edit_specialization').value,
+                working_hours_start: document.getElementById('edit_working_hours_start').value,
+                working_hours_end: document.getElementById('edit_working_hours_end').value,
+                slot_duration: parseInt(document.getElementById('edit_slot_duration').value)
+            };
+
+            fetch(`/doctors/${doctorId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                window.location.reload();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function deleteDoctor(doctorId) {
+            if (confirm('Are you sure you want to delete this doctor? This action cannot be undone.')) {
+                fetch(`/doctors/${doctorId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    window.location.reload();
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+    </script>
+</body>
+</html>
