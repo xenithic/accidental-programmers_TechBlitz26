@@ -60,6 +60,32 @@
             </div>
         </div>
     </div>
+
+    <!-- Reschedule Modal -->
+    <div class="modal fade" id="rescheduleModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reschedule Appointment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">New Date</label>
+                        <input type="date" class="form-control" id="reschDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Time</label>
+                        <input type="time" class="form-control" id="reschTime" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submitReschedule()">Reschedule</button>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -82,6 +108,7 @@
                                     <th>Date</th>
                                     <th>Time</th>
                                     <th>Status</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -94,6 +121,12 @@
                                 <td>${appt.date}</td>
                                 <td>${appt.time}</td>
                                 <td><span class="badge bg-primary">${appt.status}</span></td>
+                                <td>
+                                    ${appt.status !== 'cancelled' ? `
+                                        <button class="btn btn-sm btn-outline-danger me-1" onclick="cancelAppointment('${appt.appointment_id}')">Cancel</button>
+                                        <button class="btn btn-sm btn-outline-info" onclick="openRescheduleModal('${appt.appointment_id}')">Reschedule</button>
+                                    ` : ''}
+                                </td>
                             </tr>
                         `;
                     });
@@ -109,6 +142,65 @@
                     document.getElementById('appointmentsContainer').innerHTML = '<p class="text-danger">Failed to load appointments.</p>';
                 });
         });
+
+        // Cancel Appointment Logic
+        function cancelAppointment(id) {
+            if (confirm("Are you sure you want to cancel this appointment?")) {
+                fetch(`/appointments/cancel/${id}`, {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        window.location.reload();
+                    } else {
+                        alert(data.error || "An error occurred");
+                    }
+                })
+                .catch(err => console.error(err));
+            }
+        }
+
+        // Reschedule logic
+        let currentRescheduleId = null;
+        let reschModal;
+
+        function openRescheduleModal(id) {
+            currentRescheduleId = id;
+            if (!reschModal) {
+                reschModal = new bootstrap.Modal(document.getElementById('rescheduleModal'));
+            }
+            reschModal.show();
+        }
+
+        function submitReschedule() {
+            const date = document.getElementById('reschDate').value;
+            const time = document.getElementById('reschTime').value;
+
+            if (!date || !time) {
+                alert("Please select both a new date and a new time.");
+                return;
+            }
+
+            fetch(`/appointments/reschedule/${currentRescheduleId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ date, time })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert(data.error || "Failed to reschedule.");
+                }
+            })
+            .catch(err => console.error(err));
+        }
     </script>
 </body>
 </html>

@@ -56,7 +56,10 @@ def book_appointment():
 
 from models.user import User
 
+from bson.objectid import ObjectId
+
 def serialize_appointment(appt):
+    appt['appointment_id'] = str(appt['_id'])
     appt['_id'] = str(appt['_id'])
     
     # Enrich with doctor name
@@ -114,3 +117,65 @@ def all_appointments():
         
     appointments = list(db.appointments.find())
     return jsonify([serialize_appointment(a) for a in appointments]), 200
+
+@appointments_bp.route('/cancel/<appointment_id>', methods=['POST'])
+@login_required
+def cancel_appointment(appointment_id):
+    if current_user.role == 'doctor':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        obj_id = ObjectId(appointment_id)
+    except Exception:
+        return jsonify({"error": "Invalid appointment ID"}), 400
+
+    appointment = db.appointments.find_one({"_id": obj_id})
+    if not appointment:
+        return jsonify({"error": "Appointment not found"}), 404
+
+    # Ensure patient can only cancel their own
+    if current_user.role == 'patient' and appointment.get('patient_id') != str(current_user.id):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    db.appointments.update_one({"_id": obj_id}, {"$set": {"status": "cancelled"}})
+    return jsonify({"message": "Appointment cancelled successfully"}), 200
+
+@appointments_bp.route('/reschedule/<appointment_id>', methods=['POST'])
+@login_required
+def reschedule_appointment(appointment_id):
+    if current_user.role == 'doctor':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.json
+    if not data or not data.get('date') or not data.get('time'):
+        return jsonify({"error": "Date and time are required"}), 400
+
+    try:
+        obj_id = ObjectId(appointment_id)
+    except Exception:
+        return jsonify({"error": "Invalid appointment ID"}), 400
+
+    appointment = db.appointments.find_one({"_id": obj_id})
+    if not appointment:
+        return jsonify({"error": "Appointment not found"}), 404
+
+    if current_user.role == 'patient' and appointment.get('patient_id') != str(current_user.id):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    # Cancel old appointment
+    db.appointments.update_one({"_id": obj_id}, {"$set": {"status": "cancelled"}})
+
+    # Attempt to create new
+    success, message = create_appointment(
+        doctor_id=appointment.get('doctor_id'),
+        patient_id=appointment.get('patient_id'),
+        date=data.get('date'),
+        time=data.get('time')
+    )
+
+    if not success:
+        # Revert cancellation if new slot is blocked
+        db.appointments.update_one({"_id": obj_id}, {"$set": {"status": appointment.get("status", "booked")}})
+        return jsonify({"error": message}), 409
+
+    return jsonify({"message": "Appointment rescheduled successfully", "appointment_id": message}), 200
