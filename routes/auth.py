@@ -5,12 +5,19 @@ from models.user import User
 auth_bp = Blueprint('auth', __name__)
 
 def redirect_by_role(role):
-    if role == 'patient':
+    print(f"[DEBUG Login] Detected user role: {role}")
+    if not role:
+        return redirect(url_for('auth.login'))
+        
+    safe_role = str(role).strip().lower()
+    
+    if safe_role == 'patient':
         return redirect(url_for('patient_dashboard'))
-    elif role == 'doctor':
+    elif safe_role == 'doctor':
         return redirect(url_for('doctor_dashboard'))
-    elif role == 'receptionist':
+    elif safe_role == 'receptionist':
         return redirect(url_for('receptionist_dashboard'))
+    
     return redirect(url_for('auth.login'))
 
 @auth_bp.route('/login', methods=['GET', 'POST'])

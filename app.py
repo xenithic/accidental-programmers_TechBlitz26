@@ -28,11 +28,12 @@ app.register_blueprint(appointments_bp, url_prefix='/appointments')
 @app.route('/')
 def index():
     if current_user.is_authenticated:
-        if current_user.role == 'patient':
+        safe_role = str(current_user.role).strip().lower() if current_user.role else ''
+        if safe_role == 'patient':
             return redirect(url_for('patient_dashboard'))
-        elif current_user.role == 'doctor':
+        elif safe_role == 'doctor':
             return redirect(url_for('doctor_dashboard'))
-        elif current_user.role == 'receptionist':
+        elif safe_role == 'receptionist':
             return redirect(url_for('receptionist_dashboard'))
     return redirect(url_for('auth.login'))
 
