@@ -3,69 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Receptionist Dashboard</title>
+    <title>Receptionist Dashboard - Clinic System</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { border: none; border-radius: 12px; }
+        .navbar { border-bottom: 4px solid #ffc107; } /* Warning yellow accent */
+        .badge { font-size: 0.9em; padding: 0.5em 0.75em; }
+    </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm py-2">
         <div class="container">
-            <a class="navbar-brand" href="#">Clinic System</a>
-            <div class="collapse navbar-collapse">
+            <a class="navbar-brand fw-bold mb-0 h1" href="#"><i class="bi bi-hospital me-2"></i>Clinic System</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="#">Dashboard</a>
+                        <a class="nav-link active" href="#"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Manage Appointments</a>
+                        <a class="nav-link" href="#"><i class="bi bi-calendar2-week me-1"></i> Manage Appointments</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('doctors.list_doctors') }}">Manage Doctors</a>
+                        <a class="nav-link" href="{{ url_for('doctors.list_doctors') }}"><i class="bi bi-people-fill me-1"></i> Manage Doctors</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <span class="nav-link text-white">Receptionist {{ current_user.name }}</span>
+                        <span class="nav-link text-white fw-medium"><i class="bi bi-headset me-1"></i> Receptionist {{ current_user.name }}</span>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                        <a class="nav-link" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-1"></i> Logout</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
-    <div class="container mt-5">
-        <h2>Receptionist Dashboard</h2>
-        <hr>
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <div class="card text-center text-white bg-dark mb-3 shadow-sm">
-                    <div class="card-body">
-                        <h3 class="card-title">{{ appointments_today }}</h3>
-                        <p class="card-text">Appointments Today</p>
-                        <a href="{{ url_for('appointments.book_appointment') }}" class="btn btn-outline-light btn-sm mt-2">Book Appointment</a>
+    <div class="container mt-5 mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-primary"><i class="bi bi-building me-2"></i>Receptionist Dashboard</h2>
+        </div>
+
+        <div class="row align-items-stretch mb-4">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <div class="card text-center text-white bg-primary shadow-sm h-100">
+                    <div class="card-body d-flex flex-column justify-content-center py-4">
+                        <i class="bi bi-calendar-check opacity-75 display-4 mb-2"></i>
+                        <h2 class="card-title display-5 fw-bold mb-0">{{ appointments_today }}</h2>
+                        <p class="card-text fs-5 mt-2">Appointments Today</p>
+                        <div class="mt-3">
+                            <a href="{{ url_for('appointments.book_appointment') }}" class="btn btn-light text-primary rounded-pill px-4 fw-bold shadow-sm">
+                                <i class="bi bi-plus-circle me-1"></i> Book Appointment
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card text-center mb-3 shadow-sm">
-                    <div class="card-body">
-                        <h3 class="card-title">{{ doctors_count }}</h3>
-                        <p class="card-text">Doctors on Duty</p>
-                        <a href="{{ url_for('doctors.list_doctors') }}" class="btn btn-primary btn-sm mt-2">Manage Doctors</a>
+            <div class="col-md-6 mb-3 mb-md-0">
+                <div class="card text-center text-primary bg-white shadow-sm h-100 border border-primary border-opacity-25">
+                    <div class="card-body d-flex flex-column justify-content-center py-4">
+                        <i class="bi bi-person-hearts opacity-75 display-4 mb-2"></i>
+                        <h2 class="card-title display-5 fw-bold mb-0">{{ doctors_count }}</h2>
+                        <p class="card-text fs-5 mt-2 text-muted">Doctors on Duty</p>
+                        <div class="mt-3">
+                            <a href="{{ url_for('doctors.list_doctors') }}" class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm">
+                                <i class="bi bi-sliders me-1"></i> Manage Doctors
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row mt-4">
+        <div class="row">
             <div class="col-md-12">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0">All System Appointments</h5>
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white py-3 border-bottom-0">
+                        <h5 class="mb-0 fw-bold text-secondary"><i class="bi bi-globe me-2"></i>All System Appointments</h5>
                     </div>
-                    <div class="card-body" id="allAppointmentsContainer">
-                        <p class="text-muted">Loading appointments...</p>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" id="allAppointmentsContainer">
+                            <div class="p-4 text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="text-muted mt-2">Loading appointments...</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -74,25 +104,25 @@
 
     <!-- Reschedule Modal -->
     <div class="modal fade" id="rescheduleModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Reschedule Appointment</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title"><i class="bi bi-clock-history me-2"></i>Reschedule Appointment</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label">New Date</label>
-                        <input type="date" class="form-control" id="reschDate" required>
+                        <label class="form-label fw-bold">New Date</label>
+                        <input type="date" class="form-control form-control-lg" id="reschDate" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">New Time</label>
-                        <input type="time" class="form-control" id="reschTime" required>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">New Time</label>
+                        <input type="time" class="form-control form-control-lg" id="reschTime" required>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="submitReschedule()">Reschedule</button>
+                <div class="modal-footer border-0 pb-4 pe-4">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary px-4" onclick="submitReschedule()">Confirm Reschedule</button>
                 </div>
             </div>
         </div>
@@ -111,7 +141,7 @@
                     const upcomingData = data.filter(appt => appt.date >= today);
 
                     if (!upcomingData || upcomingData.length === 0) {
-                        container.innerHTML = '<p class="text-muted">No upcoming appointments found in the system.</p>';
+                        container.innerHTML = '<div class="p-5 text-center"><i class="bi bi-inbox display-1 text-muted opacity-50 mb-3 d-block"></i><p class="text-muted fs-5">No upcoming appointments found in the system.</p></div>';
                         return;
                     }
 
@@ -122,15 +152,15 @@
                     });
 
                     let tableHTML = `
-                        <table class="table table-hover align-middle">
+                        <table class="table table-striped table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Doctor</th>
+                                    <th class="ps-4">Doctor</th>
                                     <th>Patient</th>
                                     <th>Date</th>
                                     <th>Time</th>
                                     <th>Status</th>
-                                    <th>Actions</th>
+                                    <th class="pe-4 text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -144,15 +174,15 @@
 
                         tableHTML += `
                             <tr>
-                                <td>${appt.doctor_name}</td>
-                                <td>${appt.patient_name}</td>
-                                <td>${appt.date}</td>
-                                <td>${appt.time}</td>
-                                <td><span class="badge ${badgeClass}">${statusText}</span></td>
-                                <td>
+                                <td class="ps-4 fw-medium"><i class="bi bi-person-badge text-primary me-2"></i>${appt.doctor_name}</td>
+                                <td><i class="bi bi-person me-2 text-muted"></i>${appt.patient_name}</td>
+                                <td><i class="bi bi-calendar me-2 text-muted"></i>${appt.date}</td>
+                                <td><i class="bi bi-clock me-2 text-muted"></i>${appt.time}</td>
+                                <td><span class="badge ${badgeClass} rounded-pill">${statusText}</span></td>
+                                <td class="pe-4 text-end">
                                     ${appt.status !== 'cancelled' ? `
-                                        <button class="btn btn-sm btn-outline-danger me-1" onclick="cancelAppointment('${appt.appointment_id}')">Cancel</button>
-                                        <button class="btn btn-sm btn-outline-info" onclick="openRescheduleModal('${appt.appointment_id}')">Reschedule</button>
+                                        <button class="btn btn-sm btn-outline-info me-2 rounded-pill px-3" onclick="openRescheduleModal('${appt.appointment_id}')"><i class="bi bi-pencil-square me-1"></i> Reschedule</button>
+                                        <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="cancelAppointment('${appt.appointment_id}')"><i class="bi bi-x-circle me-1"></i> Cancel</button>
                                     ` : ''}
                                 </td>
                             </tr>
@@ -167,11 +197,10 @@
                 })
                 .catch(error => {
                     console.error('Error fetching appointments:', error);
-                    document.getElementById('allAppointmentsContainer').innerHTML = '<p class="text-danger">Failed to load system appointments.</p>';
+                    document.getElementById('allAppointmentsContainer').innerHTML = '<div class="p-4 text-center"><p class="text-danger fw-bold"><i class="bi bi-exclamation-triangle me-2"></i>Failed to load system appointments.</p></div>';
                 });
         });
 
-        // Cancel Appointment Logic
         function cancelAppointment(id) {
             if (confirm("Are you sure you want to cancel this appointment?")) {
                 fetch(`/appointments/cancel/${id}`, {
@@ -180,7 +209,6 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.message) {
-                        alert(data.message);
                         window.location.reload();
                     } else {
                         alert(data.error || "An error occurred");
@@ -190,7 +218,6 @@
             }
         }
 
-        // Reschedule logic
         let currentRescheduleId = null;
         let reschModal;
 
@@ -221,7 +248,6 @@
             .then(response => response.json())
             .then(data => {
                 if (data.message) {
-                    alert(data.message);
                     window.location.reload();
                 } else {
                     alert(data.error || "Failed to reschedule.");

@@ -6,40 +6,74 @@
     <title>Patient Registration - Clinic Appointments</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #f4f6f9; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .card { border: none; border-radius: 15px; }
+        .brand-icon { font-size: 3rem; color: #20c997; }
+    </style>
 </head>
-<body class="bg-light">
-    <div class="container mt-5">
+<body>
+    <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-5">
-                <div class="card shadow-sm">
-                    <div class="card-body p-4">
-                        <h3 class="text-center mb-4">Patient Registration</h3>
+            <div class="col-md-5 col-lg-4">
+                <div class="text-center mb-4">
+                    <i class="bi bi-hospital brand-icon mb-2 d-inline-block"></i>
+                    <h2 class="fw-bold text-success">Clinic System</h2>
+                    <p class="text-muted">Create a new patient account</p>
+                </div>
+
+                <div class="card shadow">
+                    <div class="card-body p-5">
+                        <h4 class="text-center mb-4 fw-bold">Register</h4>
                         
                         {% with messages = get_flashed_messages(with_categories=true) %}
                             {% if messages %}
                                 {% for category, message in messages %}
-                                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                                    <div class="alert alert-{{ category }} shadow-sm border-0 d-flex align-items-center rounded-pill py-2">
+                                        <i class="bi {% if category == 'success' %}bi-check-circle{% else %}bi-exclamation-triangle{% endif %} me-2"></i>
+                                        {{ message }}
+                                    </div>
                                 {% endfor %}
                             {% endif %}
                         {% endwith %}
                         
                         <form method="POST" action="{{ url_for('auth.register') }}">
                             <div class="mb-3">
-                                <label for="name" class="form-label">Full Name</label>
-                                <input type="text" class="form-control" id="name" name="name" required>
+                                <label for="name" class="form-label fw-bold text-secondary">Full Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-success"></i></span>
+                                    <input type="text" class="form-control border-start-0 bg-light" id="name" name="name" placeholder="John Doe" required>
+                                </div>
                             </div>
                             <div class="mb-3">
-                                <label for="email" class="form-label">Email address</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
+                                <label for="email" class="form-label fw-bold text-secondary">Email address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-success"></i></span>
+                                    <input type="email" class="form-control border-start-0 bg-light" id="email" name="email" placeholder="name@example.com" required>
+                                </div>
                             </div>
                             <div class="mb-4">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
+                                <label for="password" class="form-label fw-bold text-secondary">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-success"></i></span>
+                                    <input type="password" class="form-control border-start-0 bg-light" id="password" name="password" placeholder="••••••••" required>
+                                </div>
                             </div>
-                            <button type="submit" class="btn btn-success w-100">Register</button>
+                            <button type="submit" class="btn btn-success w-100 rounded-pill py-2 fw-bold shadow-sm">
+                                <i class="bi bi-person-plus me-2"></i> Create Account
+                            </button>
                         </form>
-                        <div class="mt-3 text-center">
-                            <p class="mb-0">Already registered? <a href="{{ url_for('auth.login') }}">Login here</a></p>
+                        <div class="mt-4 text-center">
+                            <p class="mb-0 text-muted">Already registered? <a href="{{ url_for('auth.login') }}" class="text-success fw-bold text-decoration-none">Login here</a></p>
                         </div>
                     </div>
                 </div>

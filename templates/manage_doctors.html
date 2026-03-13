@@ -3,129 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Doctors</title>
+    <title>Manage Doctors - Clinic System</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { border: none; border-radius: 12px; }
+        .navbar { border-bottom: 4px solid #ffc107; } /* Warning yellow accent */
+        .modal-content { border: none; border-radius: 12px; }
+    </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm py-2">
         <div class="container">
-            <a class="navbar-brand" href="#">Clinic System</a>
-            <div class="collapse navbar-collapse">
+            <a class="navbar-brand fw-bold mb-0 h1" href="#"><i class="bi bi-hospital me-2"></i>Clinic System</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('receptionist_dashboard') }}">Dashboard</a>
+                        <a class="nav-link" href="{{ url_for('receptionist_dashboard') }}"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="{{ url_for('doctors.list_doctors') }}">Manage Doctors</a>
+                        <a class="nav-link active" href="{{ url_for('doctors.list_doctors') }}"><i class="bi bi-people-fill me-1"></i> Manage Doctors</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <span class="nav-link text-white">Receptionist {{ current_user.name }}</span>
+                        <span class="nav-link text-white fw-medium"><i class="bi bi-headset me-1"></i> Receptionist {{ current_user.name }}</span>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                        <a class="nav-link" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-1"></i> Logout</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
-    <div class="container mt-5">
+
+    <div class="container mt-5 mb-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Manage Doctors</h2>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDoctorModal">
-                + Add Doctor
+            <h2 class="fw-bold text-primary"><i class="bi bi-person-lines-fill me-2"></i>Manage Doctors</h2>
+            <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addDoctorModal">
+                <i class="bi bi-plus-circle me-1"></i> Add Doctor
             </button>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                    <div class="alert alert-{{ category }} shadow-sm border-0 d-flex align-items-center">
+                        <i class="bi {% if category == 'success' %}bi-check-circle{% else %}bi-exclamation-triangle{% endif %} me-2"></i>
+                        {{ message }}
+                    </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
 
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Name</th>
-                            <th>Specialization</th>
-                            <th>Working Hours</th>
-                            <th>Slot Duration (mins)</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for doctor in doctors %}
-                        <tr>
-                            <td>{{ doctor.name }}</td>
-                            <td>{{ doctor.specialization }}</td>
-                            <td>{{ doctor.working_hours_start }} - {{ doctor.working_hours_end }}</td>
-                            <td>{{ doctor.slot_duration }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-secondary me-2" onclick="editDoctor('{{ doctor.id }}', '{{ doctor.name }}', '{{ doctor.specialization }}', '{{ doctor.working_hours_start }}', '{{ doctor.working_hours_end }}', '{{ doctor.slot_duration }}')">Edit</button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteDoctor('{{ doctor.id }}')">Delete</button>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="5" class="text-center text-muted py-4">No doctors registered.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="card shadow border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Name</th>
+                                <th>Specialization</th>
+                                <th>Working Hours</th>
+                                <th>Slot Duration</th>
+                                <th class="pe-4 text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for doctor in doctors %}
+                            <tr>
+                                <td class="ps-4 fw-medium"><i class="bi bi-person-badge text-primary me-2"></i>Dr. {{ doctor.name }}</td>
+                                <td><span class="badge bg-secondary rounded-pill bg-opacity-75">{{ doctor.specialization }}</span></td>
+                                <td><i class="bi bi-clock me-2 text-muted"></i>{{ doctor.working_hours_start }} - {{ doctor.working_hours_end }}</td>
+                                <td><i class="bi bi-hourglass-split me-2 text-muted"></i>{{ doctor.slot_duration }} mins</td>
+                                <td class="pe-4 text-end">
+                                    <button class="btn btn-sm btn-outline-info rounded-pill px-3 me-2" onclick="editDoctor('{{ doctor.id }}', '{{ doctor.name }}', '{{ doctor.specialization }}', '{{ doctor.working_hours_start }}', '{{ doctor.working_hours_end }}', '{{ doctor.slot_duration }}')">
+                                        <i class="bi bi-pencil-square me-1"></i> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="deleteDoctor('{{ doctor.id }}')">
+                                        <i class="bi bi-trash me-1"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-5">
+                                    <i class="bi bi-people display-4 d-block mb-3 opacity-50"></i>
+                                    <p class="fs-5 m-0">No doctors registered.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Add Doctor Modal -->
     <div class="modal fade" id="addDoctorModal" tabindex="-1" aria-labelledby="addDoctorModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow">
                 <form method="POST" action="{{ url_for('doctors.add_doctor') }}">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addDoctorModalLabel">Add New Doctor</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="modal-header bg-primary text-white border-0">
+                        <h5 class="modal-title" id="addDoctorModalLabel"><i class="bi bi-person-plus me-2"></i>Add New Doctor</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body p-4">
                         <div class="mb-3">
-                            <label class="form-label">Name</label>
-                            <input type="text" class="form-control" name="name" required>
+                            <label class="form-label fw-bold">Name</label>
+                            <input type="text" class="form-control" name="name" placeholder="Dr. John Doe" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" name="email" required>
+                            <label class="form-label fw-bold">Email</label>
+                            <input type="email" class="form-control" name="email" placeholder="doctor@clinic.com" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Password</label>
+                            <label class="form-label fw-bold">Password</label>
                             <input type="password" class="form-control" name="password" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Specialization</label>
-                            <input type="text" class="form-control" name="specialization" required>
+                            <label class="form-label fw-bold">Specialization</label>
+                            <input type="text" class="form-control" name="specialization" placeholder="e.g. Cardiologist" required>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Start Time</label>
+                                <label class="form-label fw-bold">Start Time</label>
                                 <input type="time" class="form-control" name="working_hours_start" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">End Time</label>
+                                <label class="form-label fw-bold">End Time</label>
                                 <input type="time" class="form-control" name="working_hours_end" required>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Slot Duration (mins)</label>
-                            <input type="number" class="form-control" name="slot_duration" value="30" required>
+                            <label class="form-label fw-bold">Slot Duration (mins)</label>
+                            <select class="form-select" name="slot_duration" required>
+                                <option value="15">15 Minutes</option>
+                                <option value="30" selected>30 Minutes</option>
+                                <option value="45">45 Minutes</option>
+                                <option value="60">60 Minutes</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save Doctor</button>
+                    <div class="modal-footer border-0 pb-4 pe-4">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check2 me-1"></i> Save Doctor</button>
                     </div>
                 </form>
             </div>
@@ -134,41 +163,46 @@
 
     <!-- Edit Doctor Modal -->
     <div class="modal fade" id="editDoctorModal" tabindex="-1" aria-labelledby="editDoctorModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow">
                 <form id="editDoctorForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editDoctorModalLabel">Edit Doctor</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="modal-header bg-info text-white border-0">
+                        <h5 class="modal-title" id="editDoctorModalLabel"><i class="bi bi-pencil-square me-2"></i>Edit Doctor</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body p-4">
                         <input type="hidden" id="edit_doctor_id">
                         <div class="mb-3">
-                            <label class="form-label">Name</label>
+                            <label class="form-label fw-bold">Name</label>
                             <input type="text" class="form-control" id="edit_name" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Specialization</label>
+                            <label class="form-label fw-bold">Specialization</label>
                             <input type="text" class="form-control" id="edit_specialization" required>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Start Time</label>
+                                <label class="form-label fw-bold">Start Time</label>
                                 <input type="time" class="form-control" id="edit_working_hours_start" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">End Time</label>
+                                <label class="form-label fw-bold">End Time</label>
                                 <input type="time" class="form-control" id="edit_working_hours_end" required>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Slot Duration (mins)</label>
-                            <input type="number" class="form-control" id="edit_slot_duration" required>
+                            <label class="form-label fw-bold">Slot Duration (mins)</label>
+                            <select class="form-select" id="edit_slot_duration" required>
+                                <option value="15">15 Minutes</option>
+                                <option value="30">30 Minutes</option>
+                                <option value="45">45 Minutes</option>
+                                <option value="60">60 Minutes</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Update Doctor</button>
+                    <div class="modal-footer border-0 pb-4 pe-4">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-info text-white px-4"><i class="bi bi-cloud-arrow-up me-1"></i> Update</button>
                     </div>
                 </form>
             </div>
