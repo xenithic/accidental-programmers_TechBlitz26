@@ -38,29 +38,21 @@
         <h2>Receptionist Dashboard</h2>
         <hr>
         <div class="row mt-4">
-            <div class="col-md-4">
-                <div class="card text-center mb-3">
+            <div class="col-md-6">
+                <div class="card text-center text-white bg-dark mb-3 shadow-sm">
                     <div class="card-body">
-                        <h3 class="card-title">12</h3>
-                        <p class="card-text">Today's Appointments</p>
-                        <a href="{{ url_for('appointments.book_appointment') }}" class="btn btn-primary btn-sm mt-2">Book Appointment</a>
+                        <h3 class="card-title">{{ appointments_today }}</h3>
+                        <p class="card-text">Appointments Today</p>
+                        <a href="{{ url_for('appointments.book_appointment') }}" class="btn btn-outline-light btn-sm mt-2">Book Appointment</a>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card text-center mb-3">
+            <div class="col-md-6">
+                <div class="card text-center mb-3 shadow-sm">
                     <div class="card-body">
-                        <h3 class="card-title">5</h3>
+                        <h3 class="card-title">{{ doctors_count }}</h3>
                         <p class="card-text">Doctors on Duty</p>
                         <a href="{{ url_for('doctors.list_doctors') }}" class="btn btn-primary btn-sm mt-2">Manage Doctors</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-center mb-3">
-                    <div class="card-body">
-                        <h3 class="card-title">3</h3>
-                        <p class="card-text">Pending Approvals</p>
                     </div>
                 </div>
             </div>
@@ -68,7 +60,7 @@
 
         <div class="row mt-4">
             <div class="col-md-12">
-                <div class="card">
+                <div class="card shadow-sm">
                     <div class="card-header bg-white">
                         <h5 class="mb-0">All System Appointments</h5>
                     </div>
@@ -113,11 +105,21 @@
             fetch('/appointments/all')
                 .then(response => response.json())
                 .then(data => {
+                    const today = new Date().toISOString().split('T')[0];
+
                     const container = document.getElementById('allAppointmentsContainer');
-                    if (!data || data.length === 0) {
-                        container.innerHTML = '<p class="text-muted">No appointments found in the system.</p>';
+                    const upcomingData = data.filter(appt => appt.date >= today);
+
+                    if (!upcomingData || upcomingData.length === 0) {
+                        container.innerHTML = '<p class="text-muted">No upcoming appointments found in the system.</p>';
                         return;
                     }
+
+                    // Sort upcoming appointments by date and time
+                    upcomingData.sort((a, b) => {
+                        if (a.date !== b.date) return a.date.localeCompare(b.date);
+                        return a.time.localeCompare(b.time);
+                    });
 
                     let tableHTML = `
                         <table class="table table-hover align-middle">
@@ -134,14 +136,19 @@
                             <tbody>
                     `;
 
-                    data.forEach(appt => {
+                    upcomingData.forEach(appt => {
+                        let badgeClass = 'bg-secondary';
+                        let statusText = appt.status.charAt(0).toUpperCase() + appt.status.slice(1);
+                        if (appt.status === 'booked') badgeClass = 'bg-success';
+                        if (appt.status === 'cancelled') badgeClass = 'bg-danger';
+
                         tableHTML += `
                             <tr>
                                 <td>${appt.doctor_name}</td>
                                 <td>${appt.patient_name}</td>
                                 <td>${appt.date}</td>
                                 <td>${appt.time}</td>
-                                <td><span class="badge bg-secondary">${appt.status}</span></td>
+                                <td><span class="badge ${badgeClass}">${statusText}</span></td>
                                 <td>
                                     ${appt.status !== 'cancelled' ? `
                                         <button class="btn btn-sm btn-outline-danger me-1" onclick="cancelAppointment('${appt.appointment_id}')">Cancel</button>

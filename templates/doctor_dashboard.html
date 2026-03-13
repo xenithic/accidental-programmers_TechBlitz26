@@ -35,10 +35,20 @@
         <h2>Doctor Dashboard</h2>
         <hr>
         <div class="row mt-4">
+            <div class="col-md-4 mb-3">
+                <div class="card text-center text-white bg-success shadow-sm">
+                    <div class="card-body">
+                        <h3 class="card-title" id="todayApptCount">0</h3>
+                        <p class="card-text">Today's Appointments</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
             <div class="col-md-12">
-                <div class="card">
+                <div class="card shadow-sm">
                     <div class="card-header bg-white">
-                        <h5 class="mb-0">Today's Appointments</h5>
+                        <h5 class="mb-0">Today's Schedule</h5>
                     </div>
                     <div class="card-body" id="docAppointmentsContainer">
                         <p class="text-muted">Loading appointments...</p>
@@ -55,32 +65,42 @@
             fetch('/appointments/doctor')
                 .then(response => response.json())
                 .then(data => {
+                    const today = new Date().toISOString().split('T')[0];
+                    const todayData = data.filter(appt => appt.date === today);
+                    
+                    document.getElementById('todayApptCount').innerText = todayData.length;
+
                     const container = document.getElementById('docAppointmentsContainer');
-                    if (!data || data.length === 0) {
-                        container.innerHTML = '<p class="text-muted">No appointments scheduled.</p>';
+                    if (!todayData || todayData.length === 0) {
+                        container.innerHTML = '<p class="text-muted">No appointments scheduled for today.</p>';
                         return;
                     }
+
+                    todayData.sort((a, b) => a.time.localeCompare(b.time));
 
                     let tableHTML = `
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Patient</th>
-                                    <th>Date</th>
                                     <th>Time</th>
+                                    <th>Patient</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                     `;
 
-                    data.forEach(appt => {
+                    todayData.forEach(appt => {
+                        let badgeClass = 'bg-secondary';
+                        let statusText = appt.status.charAt(0).toUpperCase() + appt.status.slice(1);
+                        if (appt.status === 'booked') badgeClass = 'bg-success';
+                        if (appt.status === 'cancelled') badgeClass = 'bg-danger';
+
                         tableHTML += `
                             <tr>
-                                <td>${appt.patient_name}</td>
-                                <td>${appt.date}</td>
                                 <td>${appt.time}</td>
-                                <td><span class="badge bg-success">${appt.status}</span></td>
+                                <td>${appt.patient_name}</td>
+                                <td><span class="badge ${badgeClass}">${statusText}</span></td>
                             </tr>
                         `;
                     });

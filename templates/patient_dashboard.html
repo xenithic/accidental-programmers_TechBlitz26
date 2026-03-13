@@ -37,8 +37,18 @@
                 <h2>Patient Dashboard</h2>
                 <hr>
                 <div class="row mt-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="card text-center text-white bg-primary shadow-sm">
+                            <div class="card-body">
+                                <h3 class="card-title" id="upcomingApptCount">0</h3>
+                                <p class="card-text">Upcoming Appointments</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
                     <div class="col-md-4">
-                        <div class="card">
+                        <div class="card shadow-sm">
                             <div class="card-body">
                                 <h5 class="card-title">Book Appointment</h5>
                                 <p class="card-text">Schedule a new appointment with our doctors.</p>
@@ -47,9 +57,9 @@
                         </div>
                     </div>
                     <div class="col-md-8">
-                        <div class="card">
+                        <div class="card shadow-sm">
                             <div class="card-header bg-white">
-                                <h5 class="mb-0">Upcoming Appointments</h5>
+                                <h5 class="mb-0">My Upcoming Appointments</h5>
                             </div>
                             <div class="card-body" id="appointmentsContainer">
                                 <p class="text-muted">Loading appointments...</p>
@@ -94,11 +104,22 @@
             fetch('/appointments/my')
                 .then(response => response.json())
                 .then(data => {
+                    const today = new Date().toISOString().split('T')[0];
+                    const upcomingData = data.filter(appt => appt.date >= today);
+                    
+                    document.getElementById('upcomingApptCount').innerText = upcomingData.length;
+
                     const container = document.getElementById('appointmentsContainer');
                     if (!data || data.length === 0) {
-                        container.innerHTML = '<p class="text-muted">You have no upcoming appointments.</p>';
+                        container.innerHTML = '<p class="text-muted">You have no appointments on record.</p>';
                         return;
                     }
+
+                    // Sort upcoming appointments by date, then by time
+                    data.sort((a, b) => {
+                        if (a.date !== b.date) return a.date.localeCompare(b.date);
+                        return a.time.localeCompare(b.time);
+                    });
 
                     let tableHTML = `
                         <table class="table table-hover align-middle">
@@ -115,12 +136,17 @@
                     `;
 
                     data.forEach(appt => {
+                        let badgeClass = 'bg-secondary';
+                        let statusText = appt.status.charAt(0).toUpperCase() + appt.status.slice(1);
+                        if (appt.status === 'booked') badgeClass = 'bg-success';
+                        if (appt.status === 'cancelled') badgeClass = 'bg-danger';
+
                         tableHTML += `
                             <tr>
                                 <td>${appt.doctor_name}</td>
                                 <td>${appt.date}</td>
                                 <td>${appt.time}</td>
-                                <td><span class="badge bg-primary">${appt.status}</span></td>
+                                <td><span class="badge ${badgeClass}">${statusText}</span></td>
                                 <td>
                                     ${appt.status !== 'cancelled' ? `
                                         <button class="btn btn-sm btn-outline-danger me-1" onclick="cancelAppointment('${appt.appointment_id}')">Cancel</button>

@@ -51,12 +51,26 @@ def doctor_dashboard():
         return "Unauthorized", 403
     return render_template('doctor_dashboard.html')
 
+from datetime import datetime
+from database import db
+
 @app.route('/dashboard/receptionist')
 @login_required
 def receptionist_dashboard():
     if current_user.role != 'receptionist':
         return "Unauthorized", 403
-    return render_template('receptionist_dashboard.html')
+        
+    doctors_count = db.users.count_documents({'role': 'doctor'})
+    
+    today_date = datetime.now().strftime('%Y-%m-%d')
+    appointments_today = db.appointments.count_documents({
+        'date': today_date,
+        'status': {'$ne': 'cancelled'}
+    })
+    
+    return render_template('receptionist_dashboard.html', 
+                           doctors_count=doctors_count, 
+                           appointments_today=appointments_today)
 
 def init_staff_accounts():
     # Create default receptionist if not exists
