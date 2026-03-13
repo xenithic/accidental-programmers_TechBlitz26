@@ -40,12 +40,62 @@
                     <div class="card-header bg-white">
                         <h5 class="mb-0">Today's Appointments</h5>
                     </div>
-                    <div class="card-body">
-                        <p class="text-muted">No appointments scheduled for today.</p>
+                    <div class="card-body" id="docAppointmentsContainer">
+                        <p class="text-muted">Loading appointments...</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            fetch('/appointments/doctor')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('docAppointmentsContainer');
+                    if (!data || data.length === 0) {
+                        container.innerHTML = '<p class="text-muted">No appointments scheduled.</p>';
+                        return;
+                    }
+
+                    let tableHTML = `
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    data.forEach(appt => {
+                        tableHTML += `
+                            <tr>
+                                <td>${appt.patient_name}</td>
+                                <td>${appt.date}</td>
+                                <td>${appt.time}</td>
+                                <td><span class="badge bg-success">${appt.status}</span></td>
+                            </tr>
+                        `;
+                    });
+
+                    tableHTML += `
+                            </tbody>
+                        </table>
+                    `;
+                    container.innerHTML = tableHTML;
+                })
+                .catch(error => {
+                    console.error('Error fetching appointments:', error);
+                    document.getElementById('docAppointmentsContainer').innerHTML = '<p class="text-danger">Failed to load appointments.</p>';
+                });
+        });
+    </script>
 </body>
 </html>

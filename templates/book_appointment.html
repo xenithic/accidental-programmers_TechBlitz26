@@ -1,11 +1,181 @@
-<!-- Placeholder for booking appointments -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Book Appointment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment - Clinic System</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .slot-btn { width: 100px; margin: 5px; }
+    </style>
 </head>
-<body>
-    <h1>Book Appointment</h1>
+<body class="bg-light">
+    
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/">Clinic System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="nav-link text-white">Hello, {{ current_user.name }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="/">Dashboard</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h4 class="mb-0">Book an Appointment</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Alert Box -->
+                        <div id="messageBox" class="alert d-none" role="alert"></div>
+
+                        <form id="bookingForm" onsubmit="return false;">
+                            <div class="row mb-4">
+                                <!-- Doctor Selection -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Select Doctor</label>
+                                    <select class="form-select" id="doctorSelect" required>
+                                        <option value="" disabled selected>Choose a doctor...</option>
+                                        {% for doctor in doctors %}
+                                            <option value="{{ doctor.id }}">Dr. {{ doctor.name }} ({{ doctor.specialization }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <!-- Date Selection -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Select Date</label>
+                                    <input type="date" class="form-control" id="dateSelect" required>
+                                </div>
+                            </div>
+                            
+                            <hr class="mb-4">
+
+                            <!-- Available Slots -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Available Slots</label>
+                                <div id="slotsContainer" class="d-flex flex-wrap border rounded p-3 bg-light" style="min-height: 100px;">
+                                    <p class="text-muted m-0 w-100 text-center align-self-center slot-placeholder">
+                                        Please select a doctor and a date to view available time slots.
+                                    </p>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const doctorSelect = document.getElementById('doctorSelect');
+        const dateSelect = document.getElementById('dateSelect');
+        const slotsContainer = document.getElementById('slotsContainer');
+        const messageBox = document.getElementById('messageBox');
+
+        // Setup min date to today
+        const today = new Date().toISOString().split('T')[0];
+        dateSelect.setAttribute('min', today);
+
+        // Fetch slots whenever doctor or date changes
+        function fetchSlots() {
+            const doctorId = doctorSelect.value;
+            const date = dateSelect.value;
+
+            if (doctorId && date) {
+                // Clear slots container and set loading UI
+                slotsContainer.innerHTML = '<p class="text-muted m-0 w-100 text-center align-self-center">Loading slots...</p>';
+                messageBox.classList.add('d-none');
+                
+                fetch(`/appointments/available-slots/${doctorId}/${date}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        slotsContainer.innerHTML = '';
+                        const slots = data.available_slots;
+
+                        if (!slots || slots.length === 0) {
+                            slotsContainer.innerHTML = '<p class="text-warning m-0 w-100 text-center align-self-center fw-bold">No available slots for the selected date.</p>';
+                            return;
+                        }
+
+                        // Render slot buttons
+                        slots.forEach(time => {
+                            const btn = document.createElement('button');
+                            btn.className = 'btn btn-outline-primary slot-btn';
+                            btn.textContent = time;
+                            btn.onclick = () => confirmBooking(doctorId, date, time);
+                            slotsContainer.appendChild(btn);
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Error fetching slots:', err);
+                        slotsContainer.innerHTML = '<p class="text-danger m-0 w-100 text-center align-self-center">Error fetching available slots.</p>';
+                    });
+            } else {
+                slotsContainer.innerHTML = '<p class="text-muted m-0 w-100 text-center align-self-center slot-placeholder">Please select a doctor and a date to view available time slots.</p>';
+            }
+        }
+
+        doctorSelect.addEventListener('change', fetchSlots);
+        dateSelect.addEventListener('change', fetchSlots);
+
+        function showMessage(msg, type) {
+            messageBox.textContent = msg;
+            messageBox.className = `alert alert-${type}`;
+            messageBox.classList.remove('d-none');
+            // Scroll to message
+            messageBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function confirmBooking(doctorId, date, time) {
+            if (confirm(`Do you want to book an appointment for ${date} at ${time}?`)) {
+                
+                const bookingData = {
+                    doctor_id: doctorId,
+                    date: date,
+                    time: time
+                };
+
+                fetch('/appointments/book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(bookingData)
+                })
+                .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                .then(result => {
+                    if (result.status === 201) {
+                        showMessage("Appointment booked successfully!", "success");
+                        // Clear container immediately so they cant spam it
+                        slotsContainer.innerHTML = '<p class="text-success m-0 w-100 text-center align-self-center">Redirecting to dashboard...</p>';
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 2000);
+                    } else {
+                        showMessage(result.body.error || "An error occurred during booking.", "danger");
+                        fetchSlots(); // refresh slots to remove the taken one
+                    }
+                })
+                .catch(err => {
+                    console.error('Booking Error:', err);
+                    showMessage("A network error occurred.", "danger");
+                });
+            }
+        }
+    </script>
 </body>
 </html>

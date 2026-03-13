@@ -42,7 +42,7 @@
                             <div class="card-body">
                                 <h5 class="card-title">Book Appointment</h5>
                                 <p class="card-text">Schedule a new appointment with our doctors.</p>
-                                <a href="#" class="btn btn-primary">Book Now</a>
+                                <a href="{{ url_for('appointments.book_appointment') }}" class="btn btn-primary">Book Now</a>
                             </div>
                         </div>
                     </div>
@@ -51,8 +51,8 @@
                             <div class="card-header bg-white">
                                 <h5 class="mb-0">Upcoming Appointments</h5>
                             </div>
-                            <div class="card-body">
-                                <p class="text-muted">You have no upcoming appointments.</p>
+                            <div class="card-body" id="appointmentsContainer">
+                                <p class="text-muted">Loading appointments...</p>
                             </div>
                         </div>
                     </div>
@@ -60,5 +60,55 @@
             </div>
         </div>
     </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            fetch('/appointments/my')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('appointmentsContainer');
+                    if (!data || data.length === 0) {
+                        container.innerHTML = '<p class="text-muted">You have no upcoming appointments.</p>';
+                        return;
+                    }
+
+                    let tableHTML = `
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Doctor</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    data.forEach(appt => {
+                        tableHTML += `
+                            <tr>
+                                <td>${appt.doctor_name}</td>
+                                <td>${appt.date}</td>
+                                <td>${appt.time}</td>
+                                <td><span class="badge bg-primary">${appt.status}</span></td>
+                            </tr>
+                        `;
+                    });
+
+                    tableHTML += `
+                            </tbody>
+                        </table>
+                    `;
+                    container.innerHTML = tableHTML;
+                })
+                .catch(error => {
+                    console.error('Error fetching appointments:', error);
+                    document.getElementById('appointmentsContainer').innerHTML = '<p class="text-danger">Failed to load appointments.</p>';
+                });
+        });
+    </script>
 </body>
 </html>
